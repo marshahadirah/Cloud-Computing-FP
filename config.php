@@ -5,7 +5,7 @@
 
 $user = 'root'; // Keep as root unless you created a custom DB user
 
-$password = 'amanmarshaCL0UD'; // <-- Change this to your real database master password!
+$password = 'AmanMarshaCrash0ut'; // <-- Change this to your real database master password!
 
 $dbName = 'employee_db'; // <-- Double check if your database name is 'employee_db' or 'demo' in your SQL console
 
