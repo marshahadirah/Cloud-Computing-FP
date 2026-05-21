@@ -1,8 +1,42 @@
 <?php
 // =========================================================================
-// STEP 1: INITIALIZE CONFIG & SECURE Handshake
+// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION (INSERT)
 // =========================================================================
 require_once "config.php";
+
+// Check if the save button inside the modal pop-up window was clicked
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
+    
+    // Ingest and trim form values
+    $name = trim($_POST["name"]);
+    $address = trim($_POST["address"]);
+    $salary = trim($_POST["salary"]);
+    
+    // Check that fields aren't empty before pushing to database
+    if (!empty($name) && !empty($address) && !empty($salary)) {
+        
+        $sql = "INSERT INTO employees (name, address, salary) VALUES (?, ?, ?)";
+         
+        if ($stmt = mysqli_prepare($link, $sql)) {
+            // Bind input values into the statement
+            mysqli_stmt_bind_param($stmt, "sss", $param_name, $param_address, $param_salary);
+            
+            $param_name = $name;
+            $param_address = $address;
+            $param_salary = $salary;
+            
+            // Execute transaction against your Cloud SQL instance
+            if (mysqli_stmt_execute($stmt)) {
+                // Refresh the index page smoothly to show the brand new row
+                header("location: ./index.php");
+                exit();
+            } else {
+                echo "Something went wrong. Please try again later.";
+            }
+            mysqli_stmt_close($stmt);
+        }
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -39,11 +73,12 @@ require_once "config.php";
                     
                     <div class="page-header clearfix">
                         <h2 class="pull-left">Employees Details</h2>
-                        <a href="./create.php" class="btn btn-success pull-right">Add New Employee</a>
+                        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#addEmployeeModal">
+                            Add New Employee
+                        </button>
                     </div>
 
                     <?php
-                    // Attempt select query execution against the active Cloud SQL database
                     $sql = "SELECT * FROM employees";
                     if($result = mysqli_query($link, $sql)){
                         if(mysqli_num_rows($result) > 0){
@@ -54,7 +89,7 @@ require_once "config.php";
                                         echo "<th>Name</th>";
                                         echo "<th>Address</th>";
                                         echo "<th>Salary</th>";
-                                        echo "<th>Action</th>"; // Keeps structural integrity for CRUD selectors
+                                        echo "<th>Action</th>";
                                     echo "</tr>";
                                 echo "</thead>";
                                 echo "<tbody>";
@@ -65,7 +100,6 @@ require_once "config.php";
                                         echo "<td>" . $row['address'] . "</td>";
                                         echo "<td>" . $row['salary'] . "</td>";
                                         echo "<td>";
-                                            // Dynamic target tracking tags passing the unique index variables
                                             echo "<a href='read.php?id=". $row['id'] ."' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
                                             echo "<a href='update.php?id=". $row['id'] ."' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
                                             echo "<a href='delete.php?id=". $row['id'] ."' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
@@ -74,8 +108,6 @@ require_once "config.php";
                                 }
                                 echo "</tbody>";                            
                             echo "</table>";
-                            
-                            // Free up system memory blocks
                             mysqli_free_result($result);
                         } else{
                             echo "<p class='lead'><em>No records were found in your Cloud SQL instance.</em></p>";
@@ -84,7 +116,6 @@ require_once "config.php";
                         echo "ERROR: System failed to execute structural transaction query: $sql. " . mysqli_error($link);
                     }
 
-                    // Safely terminate connection link at the absolute boundary end of database execution
                     mysqli_close($link);
                     ?>
                     
@@ -92,5 +123,39 @@ require_once "config.php";
             </div>        
         </div>
     </div>
+
+    <div class="modal fade" id="addEmployeeModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="color: #333;">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">Create New Employee Record</h4>
+                </div>
+                <form action="./index.php" method="POST">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>Name</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <input type="text" name="address" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Salary</label>
+                            <input type="number" name="salary" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" name="submit_employee" class="btn btn-success">Save Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>
