@@ -31,7 +31,37 @@
                 <div class="col-md-12">
                     <div class="page-header clearfix">
                         <h2 class="pull-left">Employees Details</h2>
-                        <a href="create.php" class="btn btn-success pull-right">Add New Employee</a>
+                        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#addEmployeeModal"> Add New Employee </button>
+
+<div class="modal fade" id="addEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="color: #333;">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Employee Record</h5>
+            </div>
+            <form action="./index.php" method="POST">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" name="address" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Salary</label>
+                        <input type="number" name="salary" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" name="submit_employee" class="btn btn-success">Save Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
                     </div>
                     <?php
                     // Include config file
