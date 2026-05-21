@@ -1,16 +1,19 @@
 <?php
-// 1. Pull the variables securely from Cloud Run's Environment Settings
-$user = getenv('DB_USER') ?: 'root';
-$password = getenv('DB_PASS'); // Your master password
-$dbName = getenv('DB_NAME') ?: 'employee_db';
+// =========================================================================
+// DATABASE CREDENTIAL CONFIGURATION (HARDCODED FOR CLOUD RUN TO CLOUD SQL BRIDGE)
+// =========================================================================
 
-// 2. THE CRITICAL CLOUD SOCKET PATH FIX
-// This tells PHP exactly where Cloud Run mounts your database link inside the serverless container!
-$socketDir = getenv('DB_SOCKET_DIR') ?: '/cloudsql';
-$instanceConnectionName = 'project-09abe099-ed89-4ede-820:us-central1:free-trial-first-project'; // Double check if yours has numbers on the SQL dashboard
+$user = 'root'; // Keep as root unless you created a custom DB user
+
+$password = 'amanmarshaCL0UD'; // <-- Change this to your real database master password!
+
+$dbName = 'employee_db'; // <-- Double check if your database name is 'employee_db' or 'demo' in your SQL console
+
+$socketDir = '/cloudsql';
+
+$instanceConnectionName = 'project-09abe099-ed89-4ede-820:us-central1:free-trial-first-project'; 
 
 $socketPath = "$socketDir/$instanceConnectionName";
-
 // 3. Establish the connection using the socket parameter (the 6th slot)
 $link = mysqli_connect(
     null,                  // Host must be null when using a Unix socket
