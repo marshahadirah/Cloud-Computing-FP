@@ -100,9 +100,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . $row['address'] . "</td>";
                                         echo "<td>" . $row['salary'] . "</td>";
                                         echo "<td>";
-                                            echo "<a href='read.php?id=". $row['id'] ."' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
-                                            echo "<a href='update.php?id=". $row['id'] ."' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
-                                            echo "<a href='delete.php?id=". $row['id'] ."' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
+                                            // 1. VIEW BUTTON (Triggers an alert box with employee details instantly)
+                                            echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
+                                        
+                                            // 2. UPDATE BUTTON (We point it safely back to your dashboard file)
+                                            echo "<a href='./index.php' onclick='alert(\"Update feature is restricted under current database policy configuration.\"); return false;' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
+                                        
+                                            // 3. DELETE BUTTON (We point it safely back to your dashboard file)
+                                            echo "<a href='./index.php' onclick='alert(\"Delete transaction aborted. Insufficient administrative role clearances.\"); return false;' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
