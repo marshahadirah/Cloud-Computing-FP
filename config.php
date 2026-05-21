@@ -7,7 +7,7 @@ $dbName = getenv('DB_NAME') ?: 'employee_db';
 // 2. THE CRITICAL CLOUD SOCKET PATH FIX
 // This tells PHP exactly where Cloud Run mounts your database link inside the serverless container!
 $socketDir = getenv('DB_SOCKET_DIR') ?: '/cloudsql';
-$instanceConnectionName = 'free-trial-first-project'; // Double check if yours has numbers on the SQL dashboard
+$instanceConnectionName = 'project-09abe099-ed89-4ede-820:us-central1:free-trial-first-project'; // Double check if yours has numbers on the SQL dashboard
 
 $socketPath = "$socketDir/$instanceConnectionName";
 
