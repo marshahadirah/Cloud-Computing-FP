@@ -62,6 +62,50 @@
         </div>
     </div>
 </div>
+<div class="mt-5 mb-3 clearfix">
+    <h2 class="pull-left">Employees Details</h2>
+    <a href="./create.php" class="btn btn-success pull-right">Add New Employee</a>
+</div>
+
+<?php
+// 1. Fetch the records from your GCP Cloud SQL Database
+$sql = "SELECT * FROM employees";
+if($result = mysqli_query($link, $sql)){
+    if(mysqli_num_rows($result) > 0){
+        // 2. Build the visual table headers
+        echo '<table class="table table-bordered table-striped">';
+            echo "<thead>";
+                echo "<tr>";
+                    echo "<th>#</th>";
+                        echo "<th>Name</th>";
+                        echo "<th>Address</th>";
+                        echo "<th>Salary</th>";
+                echo "</tr>";
+            echo "</thead>";
+            echo "<tbody>";
+            
+            // 3. Loop through every row saved in the cloud and render it on screen
+            while($row = mysqli_fetch_array($result)){
+                echo "<tr>";
+                    echo "<td>" . $row['id'] . "</td>";
+                    echo "<td>" . $row['name'] . "</td>";
+                    echo "<td>" . $row['address'] . "</td>";
+                    echo "<td>" . $row['salary'] . "</td>";
+                echo "</tr>";
+            }
+            echo "</tbody>";                            
+        echo "</table>";
+        // Free result set memory
+        mysqli_free_result($result);
+    } else{
+        // Displays if your database table is currently empty
+        echo '<div class="alert alert-danger"><em>No employee records were found in the database.</em></div>';
+    }
+} else{
+    echo "ERROR: Could not execute database query. " . mysqli_error($link);
+}
+?>
+
                     </div>
                     <?php
                     // Include config file
