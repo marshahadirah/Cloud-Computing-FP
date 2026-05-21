@@ -1,3 +1,10 @@
+<?php
+// =========================================================================
+// STEP 1: INITIALIZE CONFIG & SECURE Handshake
+// =========================================================================
+require_once "config.php";
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,14 +14,14 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"></script>
     <style type="text/css">
-        .wrapper{
+        .wrapper {
             width: 650px;
             margin: 0 auto;
         }
-        .page-header h2{
+        .page-header h2 {
             margin-top: 0;
         }
-        table tr td:last-child a{
+        table tr td:last-child a {
             margin-right: 15px;
         }
     </style>
@@ -29,89 +36,14 @@
         <div class="container-fluid">
             <div class="row">
                 <div class="col-md-12">
+                    
                     <div class="page-header clearfix">
                         <h2 class="pull-left">Employees Details</h2>
-                        <button type="button" class="btn btn-success pull-right" data-toggle="modal" data-target="#addEmployeeModal"> Add New Employee </button>
+                        <a href="./create.php" class="btn btn-success pull-right">Add New Employee</a>
+                    </div>
 
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content" style="color: #333;">
-            <div class="modal-header">
-                <h5 class="modal-title">Create New Employee Record</h5>
-            </div>
-            <form action="./index.php" method="POST">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" name="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Address</label>
-                        <input type="text" name="address" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Salary</label>
-                        <input type="number" name="salary" class="form-control" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" name="submit_employee" class="btn btn-success">Save Record</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-<div class="mt-5 mb-3 clearfix">
-    <h2 class="pull-left">Employees Details</h2>
-    <a href="./create.php" class="btn btn-success pull-right">Add New Employee</a>
-</div>
-
-<?php
-// 1. Fetch the records from your GCP Cloud SQL Database
-$sql = "SELECT * FROM employees";
-if($result = mysqli_query($link, $sql)){
-    if(mysqli_num_rows($result) > 0){
-        // 2. Build the visual table headers
-        echo '<table class="table table-bordered table-striped">';
-            echo "<thead>";
-                echo "<tr>";
-                    echo "<th>#</th>";
-                        echo "<th>Name</th>";
-                        echo "<th>Address</th>";
-                        echo "<th>Salary</th>";
-                echo "</tr>";
-            echo "</thead>";
-            echo "<tbody>";
-            
-            // 3. Loop through every row saved in the cloud and render it on screen
-            while($row = mysqli_fetch_array($result)){
-                echo "<tr>";
-                    echo "<td>" . $row['id'] . "</td>";
-                    echo "<td>" . $row['name'] . "</td>";
-                    echo "<td>" . $row['address'] . "</td>";
-                    echo "<td>" . $row['salary'] . "</td>";
-                echo "</tr>";
-            }
-            echo "</tbody>";                            
-        echo "</table>";
-        // Free result set memory
-        mysqli_free_result($result);
-    } else{
-        // Displays if your database table is currently empty
-        echo '<div class="alert alert-danger"><em>No employee records were found in the database.</em></div>';
-    }
-} else{
-    echo "ERROR: Could not execute database query. " . mysqli_error($link);
-}
-?>
-
-                    </div>
                     <?php
-                    // Include config file
-                    require_once 'config.php';
-                    
-                    // Attempt select query execution
+                    // Attempt select query execution against the active Cloud SQL database
                     $sql = "SELECT * FROM employees";
                     if($result = mysqli_query($link, $sql)){
                         if(mysqli_num_rows($result) > 0){
@@ -122,7 +54,7 @@ if($result = mysqli_query($link, $sql)){
                                         echo "<th>Name</th>";
                                         echo "<th>Address</th>";
                                         echo "<th>Salary</th>";
-                                        echo "<th>Action</th>";
+                                        echo "<th>Action</th>"; // Keeps structural integrity for CRUD selectors
                                     echo "</tr>";
                                 echo "</thead>";
                                 echo "<tbody>";
@@ -133,6 +65,7 @@ if($result = mysqli_query($link, $sql)){
                                         echo "<td>" . $row['address'] . "</td>";
                                         echo "<td>" . $row['salary'] . "</td>";
                                         echo "<td>";
+                                            // Dynamic target tracking tags passing the unique index variables
                                             echo "<a href='read.php?id=". $row['id'] ."' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
                                             echo "<a href='update.php?id=". $row['id'] ."' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
                                             echo "<a href='delete.php?id=". $row['id'] ."' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
@@ -141,18 +74,20 @@ if($result = mysqli_query($link, $sql)){
                                 }
                                 echo "</tbody>";                            
                             echo "</table>";
-                            // Free result set
+                            
+                            // Free up system memory blocks
                             mysqli_free_result($result);
                         } else{
-                            echo "<p class='lead'><em>No records were found.</em></p>";
+                            echo "<p class='lead'><em>No records were found in your Cloud SQL instance.</em></p>";
                         }
                     } else{
-                        echo "ERROR: Could not able to execute $sql. " . mysqli_error($link);
+                        echo "ERROR: System failed to execute structural transaction query: $sql. " . mysqli_error($link);
                     }
- 
-                    // Close connection
+
+                    // Safely terminate connection link at the absolute boundary end of database execution
                     mysqli_close($link);
                     ?>
+                    
                 </div>
             </div>        
         </div>
