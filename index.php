@@ -4,6 +4,10 @@
 // =========================================================================
 require_once "config.php";
 
+// Initialize Cloud Security Token for links
+$secure_token = $_ENV['APP_SECRET_TOKEN'] ?? 'MyLocalDevelopmentToken2026';
+$token_param = '&token=' . urlencode($secure_token);
+
 $bucketName = 'employee-avatar-bucket-01'; // <-- Check your exact bucket name!
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
@@ -62,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 curl_close($ch);
 
                 mysqli_stmt_close($stmt);
-                header("location: ./index.php");
+                header("location: ./index.php?token=" . urlencode($secure_token));
                 exit();
             }
         }
@@ -92,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     </style>
     <script type="text/javascript">
         $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip();   
+            $grid = $('[data-toggle="tooltip"]').tooltip();   
         });
     </script>
 </head>
@@ -127,18 +131,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                 while($row = mysqli_fetch_array($result)){
                                     echo "<tr>";
                                         echo "<td>" . $row['id'] . "</td>";
-                                        echo "<td>" . $row['name'] . "</td>";
-                                        echo "<td>" . $row['address'] . "</td>";
-                                        echo "<td>" . $row['salary'] . "</td>";
+                                        echo "<td>" . htmlspecialchars($row['name']) . "</td>";
+                                        echo "<td>" . htmlspecialchars($row['address']) . "</td>";
+                                        echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
                                         echo "<td>";
                                             // 1. VIEW BUTTON (Triggers an alert box with employee details instantly)
                                             echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
                                         
-                                            // 2. UPDATE BUTTON (We point it safely back to your dashboard file)
-                                            echo "<a href='./index.php' onclick='alert(\"Update feature is restricted under current database policy configuration.\"); return false;' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
+                                            // 2. ACTIVATED UPDATE BUTTON (Links dynamically to update.php with required token)
+                                            echo "<a href='update.php?id=" . $row['id'] . $token_param . "' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
                                         
-                                            // 3. DELETE BUTTON (We point it safely back to your dashboard file)
-                                            echo "<a href='./index.php' onclick='alert(\"Delete transaction aborted. Insufficient administrative role clearances.\"); return false;' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
+                                            // 3. ACTIVATED DELETE BUTTON (Links dynamically to delete.php with required token)
+                                            echo "<a href='delete.php?id=" . $row['id'] . $token_param . "' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
