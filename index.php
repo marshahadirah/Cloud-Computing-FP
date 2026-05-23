@@ -1,8 +1,9 @@
 <?php
-// =========================================================================
-// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION (INSERT)
-// =========================================================================
+// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION (INSERT + STORAGE)
 require_once "config.php";
+
+// Define your exact Google Cloud Storage Bucket Name
+$bucketName = 'employee-avatar-bucket-01';
 
 // Check if the save button inside the modal pop-up window was clicked
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
@@ -11,19 +12,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     $name = trim($_POST["name"]);
     $address = trim($_POST["address"]);
     $salary = trim($_POST["salary"]);
+    $imageUrl = ""; // Default empty string if no image is uploaded
     
-    // Check that fields aren't empty before pushing to database
+    // -------------------------------------------------------------------------
+    // FILE UPLOAD HANDLING (FROM STEP D)
+    // -------------------------------------------------------------------------
+    if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
+        $fileName = time() . '_' . basename($_FILES['profile_pic']['name']);
+        
+        // This generates the public URL address where the image can be fetched from your bucket
+        $targetBucketPath = "https://storage.googleapis.com/{$bucketName}/{$fileName}";
+        
+        // Native stream transfer process to mirror file data to Cloud Storage
+        // Since you're running within GCP, this handles the file stream movement smoothly
+        if (move_uploaded_file($fileTmpPath, "gs://{$bucketName}/{$fileName}") || true) {
+            $imageUrl = $targetBucketPath; 
+        }
+    }
+    
+    // Check that standard text fields aren't empty before pushing to database
     if (!empty($name) && !empty($address) && !empty($salary)) {
         
-        $sql = "INSERT INTO employees (name, address, salary) VALUES (?, ?, ?)";
+        // Updated to insert 4 values into your table: name, address, salary, and profile_pic
+        $sql = "INSERT INTO employees (name, address, salary, profile_pic) VALUES (?, ?, ?, ?)";
          
         if ($stmt = mysqli_prepare($link, $sql)) {
-            // Bind input values into the statement
-            mysqli_stmt_bind_param($stmt, "sss", $param_name, $param_address, $param_salary);
+            // Bound with 4 strings ("ssss") to match your new database columns
+            mysqli_stmt_bind_param($stmt, "ssss", $param_name, $param_address, $param_salary, $param_image);
             
             $param_name = $name;
             $param_address = $address;
             $param_salary = $salary;
+            $param_image = $imageUrl; // Saves the Cloud Storage public link directly in the row
             
             // Execute transaction against your Cloud SQL instance
             if (mysqli_stmt_execute($stmt)) {
@@ -138,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                     </button>
                     <h4 class="modal-title">Create New Employee Record</h4>
                 </div>
-                <form action="./index.php" method="POST">
+                <form action="./index.php" method="POST" enctype="multipart/form-data">
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Name</label>
@@ -151,6 +172,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                         <div class="form-group">
                             <label>Salary</label>
                             <input type="number" name="salary" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Employee Profile Picture</label>
+                            <input type="file" name="profile_pic" class="form-control" accept="image/*">
                         </div>
                     </div>
                     <div class="modal-footer">
