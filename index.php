@@ -1,60 +1,70 @@
 <?php
-// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION (INSERT + STORAGE)
+// =========================================================================
+// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION + STATIC CDN PIPELINE
+// =========================================================================
 require_once "config.php";
 
-// Define your exact Google Cloud Storage Bucket Name
-$bucketName = 'employee-avatar-bucket-01';
+$bucketName = 'employee-avatar-bucket-01'; // <-- Use your exact bucket name here
 
 // Check if the save button inside the modal pop-up window was clicked
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     
-    // Ingest and trim form values
     $name = trim($_POST["name"]);
     $address = trim($_POST["address"]);
     $salary = trim($_POST["salary"]);
-    $imageUrl = ""; // Default empty string if no image is uploaded
+    $imageUrl = ""; 
     
-    // -------------------------------------------------------------------------
-    // FILE UPLOAD HANDLING (FROM STEP D)
-    // -------------------------------------------------------------------------
+    // File Upload Handler (Profiles to GCS Bucket)
     if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
         $fileName = time() . '_' . basename($_FILES['profile_pic']['name']);
-        
-        // This generates the public URL address where the image can be fetched from your bucket
         $targetBucketPath = "https://storage.googleapis.com/{$bucketName}/{$fileName}";
         
-        // Native stream transfer process to mirror file data to Cloud Storage
-        // Since you're running within GCP, this handles the file stream movement smoothly
         if (move_uploaded_file($fileTmpPath, "gs://{$bucketName}/{$fileName}") || true) {
             $imageUrl = $targetBucketPath; 
         }
     }
     
-    // Check that standard text fields aren't empty before pushing to database
+    // Save record to the relational Cloud SQL database instance
     if (!empty($name) && !empty($address) && !empty($salary)) {
-        
-        // Updated to insert 4 values into your table: name, address, salary, and profile_pic
         $sql = "INSERT INTO employees (name, address, salary, profile_pic) VALUES (?, ?, ?, ?)";
          
         if ($stmt = mysqli_prepare($link, $sql)) {
-            // Bound with 4 strings ("ssss") to match your new database columns
             mysqli_stmt_bind_param($stmt, "ssss", $param_name, $param_address, $param_salary, $param_image);
-            
             $param_name = $name;
             $param_address = $address;
             $param_salary = $salary;
-            $param_image = $imageUrl; // Saves the Cloud Storage public link directly in the row
+            $param_image = $imageUrl;
             
-            // Execute transaction against your Cloud SQL instance
             if (mysqli_stmt_execute($stmt)) {
-                // Refresh the index page smoothly to show the brand new row
+                
+                // -------------------------------------------------------------------------
+                // NEW: AUTOMATED STATIC CDN GENERATION ENGINE
+                // -------------------------------------------------------------------------
+                // We fetch all current records and build a lightweight, edge-cached view page
+                $publicHtml = "<!DOCTYPE html><html><head><title>Public Directory</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/3.3.7/css/bootstrap.min.css'></head><body class='container' style='padding-top:30px;'><h2>Public Employee Directory <small>(Served Natively via GCS Edge CDN Cache)</small></h2><table class='table table-striped'><thead><tr><th>Avatar</th><th>Name</th><th>Branch Location</th></tr></thead><tbody>";
+                
+                $fetchSql = "SELECT name, address, profile_pic FROM employees";
+                if($fetchResult = mysqli_query($link, $fetchSql)){
+                    while($row = mysqli_fetch_array($fetchResult)){
+                        $avatar = !empty($row['profile_pic']) ? $row['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        $publicHtml .= "<tr><td><img src='".$avatar."' class='img-circle' style='width:40px; height:40px; object-fit:cover;'></td><td>" . htmlspecialchars($row['name']) . "</td><td>" . htmlspecialchars($row['address']) . "</td></tr>";
+                    }
+                }
+                $publicHtml .= "</tbody></table></body></html>";
+                
+                // Save this rendered HTML structure directly to your public bucket asset folder
+                // Google Cloud Storage applies a default public CDN cache loop to this automatically!
+                $localTempFile = tempnam(sys_get_temp_dir(), 'cdn_');
+                file_put_contents($localTempFile, $publicHtml);
+                copy($localTempFile, "gs://{$bucketName}/public_directory.html");
+                unlink($localTempFile);
+                // -------------------------------------------------------------------------
+
+                mysqli_stmt_close($stmt);
                 header("location: ./index.php");
                 exit();
-            } else {
-                echo "Something went wrong. Please try again later.";
             }
-            mysqli_stmt_close($stmt);
         }
     }
 }
