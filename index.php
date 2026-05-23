@@ -1,12 +1,11 @@
 <?php
 // =========================================================================
-// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION + STATIC CDN PIPELINE
+// STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION + API CDN UPLOAD
 // =========================================================================
 require_once "config.php";
 
-$bucketName = 'employee-avatar-bucket-01'; // <-- Use your exact bucket name here
+$bucketName = 'employee-avatar-bucket-01'; // <-- Check your exact bucket name!
 
-// Check if the save button inside the modal pop-up window was clicked
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     
     $name = trim($_POST["name"]);
@@ -14,18 +13,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     $salary = trim($_POST["salary"]);
     $imageUrl = ""; 
     
-    // File Upload Handler (Profiles to GCS Bucket)
+    // 1. Core Profile Image Upload handler via API
     if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
         $fileName = time() . '_' . basename($_FILES['profile_pic']['name']);
-        $targetBucketPath = "https://storage.googleapis.com/{$bucketName}/{$fileName}";
         
-        if (move_uploaded_file($fileTmpPath, "gs://{$bucketName}/{$fileName}") || true) {
-            $imageUrl = $targetBucketPath; 
-        }
+        $ch = curl_init("https://storage.googleapis.com/upload/storage/v1/b/{$bucketName}/o?uploadType=media&name={$fileName}");
+        curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents($fileTmpPath));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $_FILES['profile_pic']['type']]);
+        curl_exec($ch);
+        curl_close($ch);
+        
+        $imageUrl = "https://storage.googleapis.com/{$bucketName}/{$fileName}";
     }
     
-    // Save record to the relational Cloud SQL database instance
+    // 2. Save record to Cloud SQL Database
     if (!empty($name) && !empty($address) && !empty($salary)) {
         $sql = "INSERT INTO employees (name, address, salary, profile_pic) VALUES (?, ?, ?, ?)";
          
@@ -38,10 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
             
             if (mysqli_stmt_execute($stmt)) {
                 
-                // -------------------------------------------------------------------------
-                // NEW: AUTOMATED STATIC CDN GENERATION ENGINE
-                // -------------------------------------------------------------------------
-                // We fetch all current records and build a lightweight, edge-cached view page
+                // 3. GENERATE STATIC PUBLIC DIRECTORY HTML STRING
                 $publicHtml = "<!DOCTYPE html><html><head><title>Public Directory</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/3.3.7/css/bootstrap.min.css'></head><body class='container' style='padding-top:30px;'><h2>Public Employee Directory <small>(Served Natively via GCS Edge CDN Cache)</small></h2><table class='table table-striped'><thead><tr><th>Avatar</th><th>Name</th><th>Branch Location</th></tr></thead><tbody>";
                 
                 $fetchSql = "SELECT name, address, profile_pic FROM employees";
@@ -53,15 +53,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 }
                 $publicHtml .= "</tbody></table></body></html>";
                 
-                // Save this rendered HTML structure directly to your public bucket asset folder
-                // Google Cloud Storage applies a default public CDN cache loop to this automatically!
-                $localDirectoryFile = "/tmp/public_directory.html";
-                file_put_contents($localDirectoryFile, $publicHtml);
-                
-                // This drops the file directly into your bucket using GCP's fallback upload channel
-                // If your container lacks the gs:// wrapper protocol, it will save it natively!
-                @copy($localDirectoryFile, "gs://{$bucketName}/public_directory.html");
-                // -------------------------------------------------------------------------
+                // 4. PUSH GENERATED HTML DIRECTLY TO BUCKET VIA HTTP PUT
+                $ch = curl_init("https://storage.googleapis.com/upload/storage/v1/b/{$bucketName}/o?uploadType=media&name=public_directory.html");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $publicHtml);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: text/html']);
+                curl_exec($ch);
+                curl_close($ch);
 
                 mysqli_stmt_close($stmt);
                 header("location: ./index.php");
