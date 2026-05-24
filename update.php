@@ -16,7 +16,7 @@ $name = $address = $salary = "";
 $name_err = $address_err = $salary_err = "";
  
 // Processing form data when form is submitted (POST)
-if (isset($_POST["id"]) && !empty($_POST["id"])) {
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && !empty($_POST["id"])) {
     // Get hidden input value
     $id = $_POST["id"];
     
@@ -65,6 +65,10 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
             
             // Attempt to execute the prepared statement
             if (mysqli_stmt_execute($stmt)) {
+                // Close statements and links before breaking process flow
+                mysqli_stmt_close($stmt);
+                mysqli_close($link);
+
                 // Records updated successfully. Redirect to landing page with token intact
                 header("location: index.php?token=" . urlencode($secure_token));
                 exit();
@@ -75,7 +79,7 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
         }
     }
     
-    // Close connection
+    // Close connection for processed POST request
     mysqli_close($link);
     
 } else {
@@ -100,6 +104,8 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
                     $address = $row["address"];
                     $salary = $row["salary"];
                 } else {
+                    mysqli_stmt_close($stmt);
+                    mysqli_close($link);
                     header("location: error.php");
                     exit();
                 }
@@ -147,8 +153,7 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
                             <input type="text" name="salary" class="form-control <?php echo (!empty($salary_err)) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($salary); ?>">
                             <span class="invalid-feedback"><?php echo $salary_err;?></span>
                         </div>
-                        <input type="hidden" name="id" value="<?php echo $id; ?>"/>
-                        <!-- Pass security token down via POST when submitting form -->
+                        <input type="hidden" name="id" value="<?php echo htmlspecialchars($id); ?>"/>
                         <input type="hidden" name="token" value="<?php echo htmlspecialchars($secure_token); ?>"/>
                         <input type="submit" class="btn btn-primary" value="Submit">
                         <a href="index.php?token=<?php echo urlencode($secure_token); ?>" class="btn btn-secondary ml-2">Cancel</a>
