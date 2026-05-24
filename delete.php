@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && !empty($_POST
             <div class="row">
                 <div class="col-md-12">
                     <h2 class="mt-5 mb-3">Delete Record</h2>
-                    <form action="delete.php" method="post">
+                    <form action="delete.php?token=<?php echo urlencode($secure_token); ?>" method="post">
                         <div class="alert alert-danger">
                             <input type="hidden" name="id" value="<?php echo htmlspecialchars(trim($_GET["id"])); ?>"/>
                             <input type="hidden" name="token" value="<?php echo htmlspecialchars($secure_token); ?>"/>
