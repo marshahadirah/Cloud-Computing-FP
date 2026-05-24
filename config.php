@@ -3,8 +3,12 @@
 // DATABASE CREDENTIAL CONFIGURATION (ENVIRONMENT-AWARE CLOUD BRIDGE)
 // =========================================================================
 
-// 1. Check if running inside Google Cloud Run environment
-if (isset($_ENV['CLOUD_RUN_SERVICE']) || isset($_SERVER['CLOUD_RUN_SERVICE'])) {
+// Comprehensive check to see if running in production on Google Cloud
+$is_cloud = isset($_ENV['CLOUD_RUN_SERVICE']) || 
+            isset($_SERVER['CLOUD_RUN_SERVICE']) || 
+            (getenv('CLOUD_RUN_SERVICE') !== false);
+
+if ($is_cloud) {
     
     // CLOUD ENVIRONMENT DIRECTORY
     $user = 'root';
