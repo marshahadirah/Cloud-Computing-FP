@@ -135,7 +135,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         
                                         // 1. DYNAMIC AVATAR LAYER (Fetches GCS URL or drops back to placeholder)
                                         $avatarUrl = !empty($row['profile_pic']) ? $row['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                                        echo "<td><img src='" . htmlspecialchars($avatarUrl) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='Avatar'></td>";
+                                        echo "<td>";
+                                        // Check if profile_pic exists, is not empty, and doesn't contain a broken template text
+                                        if (!empty($row['profile_pic']) && strpos($row['profile_pic'], 'YOUR_') === false && strlen($row['profile_pic']) > 10) {
+                                            echo "<img src='" . htmlspecialchars($row['profile_pic']) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
+                                        } else {
+                                            // Fallback to the default clean shadow avatar icon used in your top rows
+                                            echo "<img src='https://cdn-icons-png.flaticon.com/512/149/149071.png' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
+                                        }
+                                    echo "</td>";
                                         
                                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
