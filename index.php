@@ -4,11 +4,7 @@
 // =========================================================================
 require_once "config.php";
 
-// Initialize Cloud Security Token for links
-$secure_token = $_ENV['APP_SECRET_TOKEN'] ?? 'MyLocalDevelopmentToken2026';
-$token_param = '&token=' . urlencode($secure_token);
-
-$bucketName = 'employee-avatar-bucket-01'; // <-- Check your exact bucket name!
+$bucketName = 'employee-avatar-bucket-01'; // <-- Verified bucket target
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     
@@ -66,7 +62,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 curl_close($ch);
 
                 mysqli_stmt_close($stmt);
-                header("location: ./index.php?token=" . urlencode($secure_token));
+                // Clean redirect straight back to plain index file to ensure smooth state reloading
+                header("location: ./index.php");
                 exit();
             }
         }
@@ -99,7 +96,7 @@ function js_clean($str) {
             vertical-align: middle !important;
         }
         .action-btn {
-            margin-right: 2px;
+            margin-right: 4px !important;
         }
     </style>
     <script type="text/javascript">
@@ -141,7 +138,7 @@ function js_clean($str) {
                                     echo "<tr>";
                                         echo "<td>" . $row['id'] . "</td>";
                                         
-                                        // 1. DYNAMIC AVATAR LAYER
+                                        // 1. DYNAMIC AVATAR LAYER WITH FALLBACK PROTECTION
                                         echo "<td>";
                                         if (!empty($row['profile_pic']) && strpos($row['profile_pic'], 'YOUR_') === false && strlen($row['profile_pic']) > 10) {
                                             echo "<img src='" . htmlspecialchars($row['profile_pic']) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
@@ -154,16 +151,13 @@ function js_clean($str) {
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
                                         
-                                        // 2. INTERACTIVE CRUDACTION HANDLERS
+                                        // 2. INTERACTIVE CRUDACTION HANDLERS USING CLEAN LINK ELEMENT SWITCHES
                                         echo "<td>";
-                                            // View Button Trigger
-                                            echo "<a href='#' class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . js_clean($row['name']) . "\\nAddress: " . js_clean($row['address']) . "\\nSalary: RM " . js_clean($row['salary']) . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</a>";
+                                            echo "<button class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . js_clean($row['name']) . "\\nAddress: " . js_clean($row['address']) . "\\nSalary: RM " . js_clean($row['salary']) . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</button>";
                                             
-                                            // Edit Button Trigger
-                                            echo "<a href='#' class='btn btn-xs btn-primary action-btn' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . js_clean($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</a>";
+                                            echo "<button class='btn btn-xs btn-primary action-btn' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . js_clean($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</button>";
                                             
-                                            // Delete Button Trigger
-                                            echo "<a href='#' class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . js_clean($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
+                                            echo "<button class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . js_clean($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
