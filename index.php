@@ -4,9 +4,48 @@
 // =========================================================================
 require_once "config.php";
 $secure_token = $_ENV['APP_SECRET_TOKEN'] ?? 'MyLocalDevelopmentToken2026';
-
 $bucketName = 'employee-avatar-bucket-01'; 
 
+// =========================================================================
+// LIVE DEMO FIX: LIVE DIRECT UPDATING HANDLER (POST)
+// =========================================================================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["action"]) && $_POST["action"] == "live_update") {
+    $id = intval($_POST["id"]);
+    $name = trim($_POST["name"]);
+    $address = trim($_POST["address"]);
+    $salary = trim($_POST["salary"]);
+    
+    if (!empty($name) && !empty($address) && !empty($salary)) {
+        $sql = "UPDATE employees SET name=?, address=?, salary=? WHERE id=?";
+        if ($stmt = mysqli_prepare($link, $sql)) {
+            mysqli_stmt_bind_param($stmt, "sssi", $name, $address, $salary, $id);
+            mysqli_stmt_execute($stmt);
+            mysqli_stmt_close($stmt);
+        }
+    }
+    header("location: ./index.php");
+    exit();
+}
+
+// =========================================================================
+// LIVE DEMO FIX: LIVE DIRECT DELETING HANDLER (POST)
+// =========================================================================
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["action"]) && $_POST["action"] == "live_delete") {
+    $id = intval($_POST["id"]);
+    
+    $sql = "DELETE FROM employees WHERE id=?";
+    if ($stmt = mysqli_prepare($link, $sql)) {
+        mysqli_stmt_bind_param($stmt, "i", $id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    }
+    header("location: ./index.php");
+    exit();
+}
+
+// =========================================================================
+// STANDARD INSERT EMPLOYEE HANDLER
+// =========================================================================
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     
     $name = trim($_POST["name"]);
@@ -59,7 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 curl_close($ch);
 
                 mysqli_stmt_close($stmt);
-                header("location: ./index.php?token=" . urlencode($secure_token));
+                header("location: ./index.php");
                 exit();
             }
         }
@@ -108,7 +147,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                     $sql = "SELECT * FROM employees";
                     if($result = mysqli_query($link, $sql)){
                         if(mysqli_num_rows($result) > 0){
-                            echo "<table class='table table-bordered table-striped' style='position: relative; z-index: 9999;'>";
+                            echo "<table class='table table-bordered table-striped'>";
                                 echo "<thead>";
                                     echo "<tr>";
                                         echo "<th>#</th>";
@@ -142,16 +181,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
 
-                                        // CLEAN LAYOUT ROW CELL
+                                        // PERFECT ALIGNED INTERACTIVE CELL
                                         echo "<td>";
-                                            // 1. View Profile Button
+                                            // 1. View Button
                                             echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
                                             
-                                            // 2. Clean Update Link
-                                            echo "<a href=\"/update?id=" . $cleanId . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
+                                            // 2. Live Edit Button (Submits form directly via JavaScript)
+                                            echo "<button class=\"btn btn-xs btn-primary action-btn\" onclick=\"
+                                                let newName = prompt('✏️ Edit Employee Name:', '" . $cleanName . "');
+                                                if(newName) {
+                                                    let newAddress = prompt('✏️ Edit Employee Address:', '" . $cleanAddress . "');
+                                                    if(newAddress) {
+                                                        let newSalary = prompt('✏️ Edit Employee Salary (RM):', '" . $cleanSalary . "');
+                                                        if(newSalary) {
+                                                            let form = document.createElement('form');
+                                                            form.method = 'POST';
+                                                            form.action = './index.php';
+                                                            form.innerHTML = '<input type=\'hidden\' name=\'action\' value=\'live_update\'>' +
+                                                                             '<input type=\'hidden\' name=\'id\' value=\'" . $cleanId . "\'>' +
+                                                                             '<input type=\'hidden\' name=\'name\' value=\'' + newName + '\'>' +
+                                                                             '<input type=\'hidden\' name=\'address\' value=\'' + newAddress + '\'>' +
+                                                                             '<input type=\'hidden\' name=\'salary\' value=\'' + newSalary + '\'>';
+                                                            document.body.appendChild(form);
+                                                            form.submit();
+                                                        }
+                                                    }
+                                                }
+                                                return false;
+                                            \"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</button>";
                                             
-                                            // 3. Clean Delete Link
-                                            echo "<a href=\"/delete?id=" . $cleanId . "\" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
+                                            // 3. Live Delete Button (Submits form directly via JavaScript)
+                                            echo "<button class=\"btn btn-xs btn-danger action-btn\" onclick=\"
+                                                if(confirm('⚠️ Are you sure you want to permanently delete " . $cleanName . "?')) {
+                                                    let form = document.createElement('form');
+                                                    form.method = 'POST';
+                                                    form.action = './index.php';
+                                                    form.innerHTML = '<input type=\'hidden\' name=\'action\' value=\'live_delete\'>' +
+                                                                     '<input type=\'hidden\' name=\'id\' value=\'" . $cleanId . "\'>';
+                                                    document.body.appendChild(form);
+                                                    form.submit();
+                                                }
+                                                return false;
+                                            \"><span class=\"glyphicon glyphicon-trash\"></span> Delete</button>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
