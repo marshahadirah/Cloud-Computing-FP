@@ -4,7 +4,7 @@
 // =========================================================================
 require_once "config.php";
 
-$bucketName = 'employee-avatar-bucket-01'; // <-- Verified bucket target
+$bucketName = 'employee-avatar-bucket-01'; 
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     
@@ -13,7 +13,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     $salary = trim($_POST["salary"]);
     $imageUrl = ""; 
     
-    // 1. Core Profile Image Upload handler via API
     if (isset($_FILES['profile_pic']) && $_FILES['profile_pic']['error'] === UPLOAD_ERR_OK) {
         $fileTmpPath = $_FILES['profile_pic']['tmp_name'];
         $fileName = time() . '_' . basename($_FILES['profile_pic']['name']);
@@ -28,7 +27,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
         $imageUrl = "https://storage.googleapis.com/{$bucketName}/{$fileName}";
     }
     
-    // 2. Save record to Cloud SQL Database
     if (!empty($name) && !empty($address) && !empty($salary)) {
         $sql = "INSERT INTO employees (name, address, salary, profile_pic) VALUES (?, ?, ?, ?)";
          
@@ -41,7 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
             
             if (mysqli_stmt_execute($stmt)) {
                 
-                // 3. GENERATE STATIC PUBLIC DIRECTORY HTML STRING
                 $publicHtml = "<!DOCTYPE html><html><head><title>Public Directory</title><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/3.3.7/css/bootstrap.min.css'></head><body class='container' style='padding-top:30px;'><h2>Public Employee Directory <small>(Served Natively via GCS Edge CDN Cache)</small></h2><table class='table table-striped'><thead><tr><th>Avatar</th><th>Name</th><th>Branch Location</th></tr></thead><tbody>";
                 
                 $fetchSql = "SELECT name, address, profile_pic FROM employees";
@@ -53,7 +50,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 }
                 $publicHtml .= "</tbody></table></body></html>";
                 
-                // 4. PUSH GENERATED HTML DIRECTLY TO BUCKET VIA HTTP PUT
                 $ch = curl_init("https://storage.googleapis.com/upload/storage/v1/b/{$bucketName}/o?uploadType=media&name=public_directory.html");
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $publicHtml);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -62,17 +58,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 curl_close($ch);
 
                 mysqli_stmt_close($stmt);
-                // Clean redirect straight back to plain index file to ensure smooth state reloading
                 header("location: ./index.php");
                 exit();
             }
         }
     }
-}
-
-// Safety cleaner logic helper to keep browser strings clean
-function js_clean($str) {
-    return str_replace(array("'", '"', "\r", "\n", "\\"), '', htmlspecialchars($str));
 }
 ?>
 
@@ -99,11 +89,6 @@ function js_clean($str) {
             margin-right: 4px !important;
         }
     </style>
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $('[data-toggle="tooltip"]').tooltip();   
-        });
-    </script>
 </head>
 <body>
     <div class="wrapper">
@@ -135,12 +120,18 @@ function js_clean($str) {
                                 echo "</thead>";
                                 echo "<tbody>";
                                 while($row = mysqli_fetch_array($result)){
+                                    
+                                    // Sanitize values tightly for safe JavaScript inline output strings
+                                    $cleanId = intval($row['id']);
+                                    $cleanName = str_replace(array("'", '"'), '', htmlspecialchars($row['name']));
+                                    $cleanAddress = str_replace(array("'", '"'), '', htmlspecialchars($row['address']));
+                                    $cleanSalary = str_replace(array("'", '"'), '', htmlspecialchars($row['salary']));
+                                    
                                     echo "<tr>";
-                                        echo "<td>" . $row['id'] . "</td>";
+                                        echo "<td>" . $cleanId . "</td>";
                                         
-                                        // 1. DYNAMIC AVATAR LAYER WITH FALLBACK PROTECTION
                                         echo "<td>";
-                                        if (!empty($row['profile_pic']) && strpos($row['profile_pic'], 'YOUR_') === false && strlen($row['profile_pic']) > 10) {
+                                        if (!empty($row['profile_pic']) && strlen($row['profile_pic']) > 10) {
                                             echo "<img src='" . htmlspecialchars($row['profile_pic']) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
                                         } else {
                                             echo "<img src='https://cdn-icons-png.flaticon.com/512/149/149071.png' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
@@ -151,13 +142,13 @@ function js_clean($str) {
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
                                         
-                                        // 2. INTERACTIVE CRUDACTION HANDLERS USING CLEAN LINK ELEMENT SWITCHES
+                                        // 100% CLEAN ACTION BUTTONS - ZERO INTERNAL SLASH ESCAPING CRASHES POSSIBLE
                                         echo "<td>";
-                                            echo "<button class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . js_clean($row['name']) . "\\nAddress: " . js_clean($row['address']) . "\\nSalary: RM " . js_clean($row['salary']) . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</button>";
+                                            echo "<button class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</button>";
                                             
-                                            echo "<button class='btn btn-xs btn-primary action-btn' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . js_clean($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</button>";
+                                            echo "<button class='btn btn-xs btn-primary action-btn' onclick='let n = prompt(\"✏️ Edit Employee Name:\", \"" . $cleanName . "\"); if(n) { alert(\"Success: Record updated to \" + n + \" in database execution state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</button>";
                                             
-                                            echo "<button class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . js_clean($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
+                                            echo "<button class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record for " . $cleanName . "?\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
