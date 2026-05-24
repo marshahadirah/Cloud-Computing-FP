@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && !empty($_POST
 <body>
     <div class="wrapper">
         <h2 class="mt-5">Update Record</h2>
-        <form action="https://employee-crud-service-601529197923.asia-southeast1.run.app/update.php" method="post">
+        <form action="/update" method="post">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" class="form-control" value="<?php echo htmlspecialchars($name); ?>" required>
