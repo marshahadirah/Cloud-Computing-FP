@@ -3,6 +3,7 @@
 // STEP 1: INITIALIZE CONFIG & HANDLE MODAL FORM INGESTION + API CDN UPLOAD
 // =========================================================================
 require_once "config.php";
+$secure_token = $_ENV['APP_SECRET_TOKEN'] ?? 'MyLocalDevelopmentToken2026';
 
 $bucketName = 'employee-avatar-bucket-01'; 
 
@@ -144,11 +145,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         
                                         // 100% CLEAN ACTION BUTTONS - ZERO INTERNAL SLASH ESCAPING CRASHES POSSIBLE
                                         echo "<td>";
+                                            // 1. View Button (Kept your nice JavaScript alert breakdown)
                                             echo "<button class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</button>";
                                             
-                                            echo "<button class='btn btn-xs btn-primary action-btn' onclick='let n = prompt(\"✏️ Edit Employee Name:\", \"" . $cleanName . "\"); if(n) { alert(\"Success: Record updated to \" + n + \" in database execution state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</button>";
+                                            // 2. REAL Edit Link (Points directly to update.php with parameters)
+                                            echo "<a href='update.php?id=" . $cleanId . "&token=" . urlencode($secure_token) . "' class='btn btn-xs btn-primary action-btn'><span class='glyphicon glyphicon-pencil'></span> Edit</a>";
                                             
-                                            echo "<button class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record for " . $cleanName . "?\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</button>";
+                                            // 3. REAL Delete Link (Points directly to your new instant delete script)
+                                            echo "<a href='delete.php?id=" . $cleanId . "&token=" . urlencode($secure_token) . "' class='btn btn-xs btn-danger action-btn' onclick='return confirm(\"⚠️ Are you absolutely sure you want to delete " . $cleanName . "?\");'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
