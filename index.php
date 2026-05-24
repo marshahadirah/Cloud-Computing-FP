@@ -181,36 +181,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
 
-                                        // PERFECT ALIGNED INTERACTIVE CELL
                                         echo "<td>";
-                                            // 1. View Button
+                                            // 1. View Profile Button
                                             echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
                                             
-                                            // 2. Live Edit Button (Submits form directly via JavaScript)
-                                            echo "<button class=\"btn btn-xs btn-primary action-btn\" onclick=\"
-                                                let newName = prompt('✏️ Edit Employee Name:', '" . $cleanName . "');
-                                                if(newName) {
-                                                    let newAddress = prompt('✏️ Edit Employee Address:', '" . $cleanAddress . "');
-                                                    if(newAddress) {
-                                                        let newSalary = prompt('✏️ Edit Employee Salary (RM):', '" . $cleanSalary . "');
-                                                        if(newSalary) {
-                                                            let form = document.createElement('form');
-                                                            form.method = 'POST';
-                                                            form.action = './index.php';
-                                                            form.innerHTML = '<input type=\'hidden\' name=\'action\' value=\'live_update\'>' +
-                                                                             '<input type=\'hidden\' name=\'id\' value=\'" . $cleanId . "\'>' +
-                                                                             '<input type=\'hidden\' name=\'name\' value=\'' + newName + '\'>' +
-                                                                             '<input type=\'hidden\' name=\'address\' value=\'' + newAddress + '\'>' +
-                                                                             '<input type=\'hidden\' name=\'salary\' value=\'' + newSalary + '\'>';
-                                                            document.body.appendChild(form);
-                                                            form.submit();
-                                                        }
-                                                    }
-                                                }
-                                                return false;
-                                            \"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</button>";
+                                            // 2. Beautiful Modal Edit Button (No more prompt popups!)
+                                            echo "<button class=\"btn btn-xs btn-primary action-btn open-edit-modal\" 
+                                                    data-id=\"" . $cleanId . "\" 
+                                                    data-name=\"" . $cleanName . "\" 
+                                                    data-address=\"" . $cleanAddress . "\" 
+                                                    data-salary=\"" . $cleanSalary . "\">
+                                                    <span class=\"glyphicon glyphicon-pencil\"></span> Edit
+                                                  </button>";
                                             
-                                            // 3. Live Delete Button (Submits form directly via JavaScript)
+                                            // 3. Live Delete Button
                                             echo "<button class=\"btn btn-xs btn-danger action-btn\" onclick=\"
                                                 if(confirm('⚠️ Are you sure you want to permanently delete " . $cleanName . "?')) {
                                                     let form = document.createElement('form');
