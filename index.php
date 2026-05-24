@@ -116,13 +116,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<th>Name</th>";
                                         echo "<th>Address</th>";
                                         echo "<th>Salary</th>";
-                                        echo "<th>Action</th>";
+                                        echo "<th>Action</th>"; 
                                     echo "</tr>";
                                 echo "</thead>";
                                 echo "<tbody>";
                                 while($row = mysqli_fetch_array($result)){
                                     
-                                    // Sanitize values tightly for safe JavaScript inline output strings
                                     $cleanId = intval($row['id']);
                                     $cleanName = str_replace(array("'", '"'), '', htmlspecialchars($row['name']));
                                     $cleanAddress = str_replace(array("'", '"'), '', htmlspecialchars($row['address']));
@@ -143,22 +142,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
 
+                                        // CLEAN LAYOUT ROW CELL
                                         echo "<td>";
-                                        
-                                        echo "<td>";
-                                        echo "<td>";
-                                        // 1. View Profile Button
-                                        echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
-                                        
-                                        // 2. Clean Update Link (NO .PHP EXTENSION)
-                                        echo "<a href=\"/update?id=" . $cleanId . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
-                                        
-                                        // 3. Clean Delete Link (NO .PHP EXTENSION)
-                                        echo "<a href=\"/delete?id=" . $cleanId . "\" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
-                                    echo "</td>";
-                                    echo "</td>";
-
-                                    echo "</td>";
+                                            // 1. View Profile Button
+                                            echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
+                                            
+                                            // 2. Clean Update Link
+                                            echo "<a href=\"/update?id=" . $cleanId . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
+                                            
+                                            // 3. Clean Delete Link
+                                            echo "<a href=\"/delete?id=" . $cleanId . "\" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
+                                        echo "</td>";
                                     echo "</tr>";
                                 }
                                 echo "</tbody>";            
