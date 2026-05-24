@@ -121,6 +121,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                 echo "<thead>";
                                     echo "<tr>";
                                         echo "<th>#</th>";
+                                        echo "<th>Avatar</th>"; // <-- Added Header Column
                                         echo "<th>Name</th>";
                                         echo "<th>Address</th>";
                                         echo "<th>Salary</th>";
@@ -131,17 +132,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                 while($row = mysqli_fetch_array($result)){
                                     echo "<tr>";
                                         echo "<td>" . $row['id'] . "</td>";
+                                        
+                                        // 1. DYNAMIC AVATAR LAYER (Fetches GCS URL or drops back to placeholder)
+                                        $avatarUrl = !empty($row['profile_pic']) ? $row['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                                        echo "<td><img src='" . htmlspecialchars($avatarUrl) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='Avatar'></td>";
+                                        
                                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
                                         echo "<td>";
-                                            // 1. VIEW BUTTON (Triggers an alert box with employee details instantly)
-                                            echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
-                                        
-                                            // 2. ACTIVATED UPDATE BUTTON (Links dynamically to update.php with required token)
+                                            // 1. VIEW BUTTON
+                                            echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' class='btn btn-xs btn-default' title='View'><span class='glyphicon glyphicon-eye-open'></span> View</a> ";
+                    
+                                            // 2. BULLETPROOF UPDATE BUTTON
                                             echo "<a href='update.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-primary' style='display: inline-block; padding: 2px 5px;' title='Update'><span class='glyphicon glyphicon-pencil'></span> Edit</a> ";
-                                        
-                                            // 3. ACTIVATED DELETE BUTTON (Links dynamically to delete.php with required token)
+                    
+                                            // 3. BULLETPROOF DELETE BUTTON
                                             echo "<a href='delete.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-danger' style='display: inline-block; padding: 2px 5px;' title='Delete'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
                                         echo "</td>";
                                     echo "</tr>";
@@ -155,8 +161,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                     } else{
                         echo "ERROR: System failed to execute structural transaction query: $sql. " . mysqli_error($link);
                     }
-
-                    mysqli_close($link);
                     ?>
                     
                 </div>
