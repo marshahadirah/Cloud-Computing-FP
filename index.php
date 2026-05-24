@@ -60,7 +60,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
         $ch = curl_init("https://storage.googleapis.com/upload/storage/v1/b/{$bucketName}/o?uploadType=media&name={$fileName}");
         curl_setopt($ch, CURLOPT_POSTFIELDS, file_get_contents($fileTmpPath));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: ' . $_FILES['profile_pic']['type']]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: ' . $_FILES['profile_pic']['type'],
+        'Authorization: Bearer MyLocalDevelopmentToken2026' ]);
         curl_exec($ch);
         curl_close($ch);
         
