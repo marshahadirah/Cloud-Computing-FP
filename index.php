@@ -50,9 +50,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 
                 $fetchSql = "SELECT name, address, profile_pic FROM employees";
                 if($fetchResult = mysqli_query($link, $fetchSql)){
-                    while($row = mysqli_fetch_array($fetchResult)){
-                        $avatar = !empty($row['profile_pic']) ? $row['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
-                        $publicHtml .= "<tr><td><img src='".$avatar."' class='img-circle' style='width:40px; height:40px; object-fit:cover;'></td><td>" . htmlspecialchars($row['name']) . "</td><td>" . htmlspecialchars($row['address']) . "</td></tr>";
+                    while($fRow = mysqli_fetch_array($fetchResult)){
+                        $avatar = !empty($fRow['profile_pic']) ? $fRow['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                        $publicHtml .= "<tr><td><img src='".$avatar."' class='img-circle' style='width:40px; height:40px; object-fit:cover;'></td><td>" . htmlspecialchars($fRow['name']) . "</td><td>" . htmlspecialchars($fRow['address']) . "</td></tr>";
                     }
                 }
                 $publicHtml .= "</tbody></table></body></html>";
@@ -72,6 +72,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
         }
     }
 }
+
+// Safety cleaner logic helper to keep browser strings clean
+function js_clean($str) {
+    return str_replace(array("'", '"', "\r", "\n", "\\"), '', htmlspecialchars($str));
+}
 ?>
 
 <!DOCTYPE html>
@@ -84,19 +89,22 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js"></script>
     <style type="text/css">
         .wrapper {
-            width: 650px;
+            width: 750px;
             margin: 0 auto;
         }
         .page-header h2 {
             margin-top: 0;
         }
-        table tr td:last-child a {
-            margin-right: 15px;
+        table tr td {
+            vertical-align: middle !important;
+        }
+        .action-btn {
+            margin-right: 2px;
         }
     </style>
     <script type="text/javascript">
         $(document).ready(function(){
-            $grid = $('[data-toggle="tooltip"]').tooltip();   
+            $('[data-toggle="tooltip"]').tooltip();   
         });
     </script>
 </head>
@@ -121,7 +129,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                 echo "<thead>";
                                     echo "<tr>";
                                         echo "<th>#</th>";
-                                        echo "<th>Avatar</th>"; // <-- Added Header Column
+                                        echo "<th>Avatar</th>";
                                         echo "<th>Name</th>";
                                         echo "<th>Address</th>";
                                         echo "<th>Salary</th>";
@@ -133,34 +141,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                     echo "<tr>";
                                         echo "<td>" . $row['id'] . "</td>";
                                         
-                                        // 1. DYNAMIC AVATAR LAYER (Fetches GCS URL or drops back to placeholder)
-                                        $avatarUrl = !empty($row['profile_pic']) ? $row['profile_pic'] : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                                        // 1. DYNAMIC AVATAR LAYER
                                         echo "<td>";
-                                        // Check if profile_pic exists, is not empty, and doesn't contain a broken template text
                                         if (!empty($row['profile_pic']) && strpos($row['profile_pic'], 'YOUR_') === false && strlen($row['profile_pic']) > 10) {
                                             echo "<img src='" . htmlspecialchars($row['profile_pic']) . "' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
                                         } else {
-                                            // Fallback to the default clean shadow avatar icon used in your top rows
                                             echo "<img src='https://cdn-icons-png.flaticon.com/512/149/149071.png' class='img-circle' style='width:40px; height:40px; object-fit:cover;' alt='avatar'>";
                                         }
-                                    echo "</td>";
+                                        echo "</td>";
                                         
                                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
-                                        echo "<td style='vertical-align: middle;'>";
-                                        // 1. VIEW BUTTON (Pops up a clean notification with employee data)
-                                        echo "<a href='#' class='btn btn-xs btn-info' style='margin-right: 5px;' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: " . $row['salary'] . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</a> ";
-                                    
-                                        // 2. EDIT BUTTON (Pops up an input box pretending to change the record)
-                                        echo "<a href='#' class='btn btn-xs btn-primary' style='margin-right: 5px;' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . addslashes($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</a> ";
-                                    
-                                        // 3. DELETE BUTTON (Pops up a confirmation window)
-                                        echo "<a href='#' class='btn btn-xs btn-danger' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . addslashes($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
-                                    echo "</td>";
+                                        
+                                        // 2. INTERACTIVE CRUDACTION HANDLERS
+                                        echo "<td>";
+                                            // View Button Trigger
+                                            echo "<a href='#' class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . js_clean($row['name']) . "\\nAddress: " . js_clean($row['address']) . "\\nSalary: RM " . js_clean($row['salary']) . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</a>";
+                                            
+                                            // Edit Button Trigger
+                                            echo "<a href='#' class='btn btn-xs btn-primary action-btn' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . js_clean($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</a>";
+                                            
+                                            // Delete Button Trigger
+                                            echo "<a href='#' class='btn btn-xs btn-danger action-btn' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . js_clean($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
+                                        echo "</td>";
                                     echo "</tr>";
                                 }
-                                echo "</tbody>";                            
+                                echo "</tbody>";            
                             echo "</table>";
                             mysqli_free_result($result);
                         } else{
@@ -169,6 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                     } else{
                         echo "ERROR: System failed to execute structural transaction query: $sql. " . mysqli_error($link);
                     }
+                    mysqli_close($link);
                     ?>
                     
                 </div>
@@ -212,6 +220,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
             </div>
         </div>
     </div>
-
 </body>
 </html>
