@@ -59,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                 curl_close($ch);
 
                 mysqli_stmt_close($stmt);
-                header("location: ./index.php");
+                header("location: ./index.php?token=" . urlencode($secure_token));
                 exit();
             }
         }
@@ -142,18 +142,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
-                                        
-                                        // 100% CLEAN ACTION BUTTONS - ZERO INTERNAL SLASH ESCAPING CRASHES POSSIBLE
+
                                         echo "<td>";
-                                            // 1. View Button (Kept your nice JavaScript alert breakdown)
-                                            echo "<button class='btn btn-xs btn-info action-btn' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</button>";
-                                            
-                                            // 2. REAL Edit Link (Points directly to update.php with parameters)
-                                            echo "<a href='update.php?id=" . $cleanId . "&token=" . urlencode($secure_token) . "' class='btn btn-xs btn-primary action-btn'><span class='glyphicon glyphicon-pencil'></span> Edit</a>";
-                                            
-                                            // 3. REAL Delete Link (Points directly to your new instant delete script)
-                                            echo "<a href='delete.php?id=" . $cleanId . "&token=" . urlencode($secure_token) . "' class='btn btn-xs btn-danger action-btn' onclick='return confirm(\"⚠️ Are you absolutely sure you want to delete " . $cleanName . "?\");'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
-                                        echo "</td>";
+                                        // 1. View Button
+                                        echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
+                                        
+                                        // 2. Real Edit Link
+                                        echo "<a href=\"update.php?id=" . $cleanId . "&token=" . urlencode($secure_token) . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
+                                        
+                                        // 3. Real Delete Link
+                                        echo "<a href=\"delete.php?id=" . $cleanId . "&token=\" . urlencode($secure_token) . \" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you absolutely sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
+                                    echo "</td>";
                                     echo "</tr>";
                                 }
                                 echo "</tbody>";            
