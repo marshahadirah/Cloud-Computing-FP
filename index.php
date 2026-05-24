@@ -263,5 +263,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
             </div>
         </div>
     </div>
+    <div class="modal fade" id="editEmployeeModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content" style="color: #333; border-radius: 6px;">
+            <div class="modal-header" style="background-color: #337ab7; color: white; border-top-left-radius: 5px; border-top-right-radius: 5px;">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.8;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"><span class="glyphicon glyphicon-edit"></span> Update Employee Record</h4>
+            </div>
+            <form action="./index.php" method="POST">
+                <input type="hidden" name="action" value="live_update">
+                <input type="hidden" name="id" id="edit_id">
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label style="font-weight: 600;"><span class="glyphicon glyphicon-user"></span> Employee Name</label>
+                        <input type="text" name="name" id="edit_name" class="form-control" style="border-radius: 4px;" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;"><span class="glyphicon glyphicon-map-marker"></span> Home Address</label>
+                        <input type="text" name="address" id="edit_address" class="form-control" style="border-radius: 4px;" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight: 600;">RM Salary Amount</label>
+                        <div class="input-group">
+                            <span class="input-group-addon" style="font-weight: bold; background-color: #eee;">RM</span>
+                            <input type="number" name="salary" id="edit_salary" class="form-control" style="border-top-right-radius: 4px; border-bottom-right-radius: 4px;" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #f9f9f9; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" style="border-radius: 4px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #337ab7; border-color: #2e6da4; border-radius: 4px; font-weight: 600;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+        <script type="text/javascript">
+        $(document).ready(function() {
+            $('.open-edit-modal').on('click', function(e) {
+                e.preventDefault();
+                
+                // Extract raw details from clicked row button dataset values
+                var id = $(this).data('id');
+                var name = $(this).data('name');
+                var address = $(this).data('address');
+                var salary = $(this).data('salary');
+                
+                // Inject strings straight into matching popup form input values
+                $('#edit_id').val(id);
+                $('#edit_name').val(name);
+                $('#edit_address').val(address);
+                $('#edit_salary').val(salary);
+                
+                // Smoothly slide down the modal interface layout 
+                $('#editEmployeeModal').modal('show');
+            });
+        });
+        </script>
 </body>
 </html>
