@@ -145,14 +145,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
 
                                         echo "<td>";
                                         
+                                        echo "<td>";
                                         // 1. View Profile Button
                                         echo "<button class=\"btn btn-xs btn-info action-btn\" onclick=\"alert('📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $cleanId . "\\nName: " . $cleanName . "\\nAddress: " . $cleanAddress . "\\nSalary: RM " . $cleanSalary . "'); return false;\"><span class=\"glyphicon glyphicon-eye-open\"></span> View</button>";
                                         
-                                        // 2. Direct Update Page Routing Link
-                                        echo "<a href=\"update.php?id=" . $cleanId . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
+                                        // 2. Absolute Update Page Routing Link
+                                        echo "<a href=\"https://employee-crud-service-601529197923.asia-southeast1.run.app/update.php?id=" . $cleanId . "\" class=\"btn btn-xs btn-primary action-btn\"><span class=\"glyphicon glyphicon-pencil\"></span> Edit</a>";
                                         
-                                        // 3. Direct Delete Trigger Link
-                                        echo "<a href=\"delete.php?id=" . $cleanId . "\" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
+                                        // 3. Absolute Delete Trigger Link
+                                        echo "<a href=\"https://employee-crud-service-601529197923.asia-southeast1.run.app/delete.php?id=" . $cleanId . "\" class=\"btn btn-xs btn-danger action-btn\" onclick=\"return confirm('⚠️ Are you sure you want to delete " . $cleanName . "?');\"><span class=\"glyphicon glyphicon-trash\"></span> Delete</a>";
+                                    echo "</td>";
 
                                     echo "</td>";
                                     echo "</tr>";
