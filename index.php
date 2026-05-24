@@ -139,10 +139,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                             echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' title='View Record' data-toggle='tooltip'><span class='glyphicon glyphicon-eye-open'></span></a>";
                                         
                                             // 2. ACTIVATED UPDATE BUTTON (Links dynamically to update.php with required token)
-                                            echo "<a href='update.php?id=" . $row['id'] . $token_param . "' title='Update Record' data-toggle='tooltip'><span class='glyphicon glyphicon-pencil'></span></a>";
+                                            echo "<a href='update.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-primary' style='display: inline-block; padding: 2px 5px;' title='Update'><span class='glyphicon glyphicon-pencil'></span> Edit</a> ";
                                         
                                             // 3. ACTIVATED DELETE BUTTON (Links dynamically to delete.php with required token)
-                                            echo "<a href='delete.php?id=" . $row['id'] . $token_param . "' title='Delete Record' data-toggle='tooltip'><span class='glyphicon glyphicon-trash'></span></a>";
+                                            echo "<a href='delete.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-danger' style='display: inline-block; padding: 2px 5px;' title='Delete'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
                                         echo "</td>";
                                     echo "</tr>";
                                 }
