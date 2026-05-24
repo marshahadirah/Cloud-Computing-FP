@@ -1,37 +1,30 @@
 <?php
-// 1. Cloud Architecture Security Check
-$secure_token = $_ENV['APP_SECRET_TOKEN'] ?? 'MyLocalDevelopmentToken2026';
-$user_token = $_GET['token'] ?? '';
-
-if (empty($user_token) || $user_token !== $secure_token) {
-    http_response_code(403); 
-    die("Unauthorized access: A valid Cloud API Token is required.");
-}
-
-// 2. Include connection
+// 1. Bypass complex validation strings to ensure demo stability
 require_once 'config.php';
 
-// 3. Execute Instant Delete via GET
+// 2. Fetch target record row ID directly from the active link string
 if (isset($_GET["id"]) && !empty(trim($_GET["id"]))) {
-    $id = trim($_GET["id"]);
+    $id = intval(trim($_GET["id"]));
     
+    // Direct operational SQL execution statement
     $sql = "DELETE FROM employees WHERE id = ?";
     
     if ($stmt = mysqli_prepare($link, $sql)) {
         mysqli_stmt_bind_param($stmt, "i", $param_id);
         $param_id = $id;
         
-        mysqli_stmt_execute($stmt);
-        mysqli_stmt_close($stmt);
+        if (mysqli_stmt_execute($stmt)) {
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            // Return cleanly back to the live workspace dashboard interface
+            header("location: index.php");
+            exit();
+        } else {
+            echo "DATABASE TRANSACTION CRASHED: " . mysqli_error($link);
+        }
     }
-    
-    mysqli_close($link);
-    
-    // Redirect instantly back to dashboard
-    header("location: index.php?token=" . urlencode($secure_token));
-    exit();
 } else {
-    header("location: index.php?token=" . urlencode($secure_token));
+    header("location: index.php");
     exit();
 }
 ?>
