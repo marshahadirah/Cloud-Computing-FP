@@ -8,9 +8,11 @@ if (empty($user_token) || $user_token !== $secure_token) {
     die("Unauthorized access: A valid Cloud API Token is required to delete resources.");
 }
 
+// Include database configuration once right at the top
+require_once 'config.php';
+
 // 2. Process Delete Action on POST Confirmation
-if (isset($_POST["id"]) && !empty($_POST["id"])) {
-    require_once 'config.php';
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["id"]) && !empty($_POST["id"])) {
     
     $sql = "DELETE FROM employees WHERE id = ?";
     
@@ -19,6 +21,10 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
         $param_id = trim($_POST["id"]);
         
         if (mysqli_stmt_execute($stmt)) {
+            // Close statement and connection before redirecting
+            mysqli_stmt_close($stmt);
+            mysqli_close($link);
+            
             // Records deleted successfully. Redirect back to landing page
             header("location: index.php?token=" . urlencode($secure_token));
             exit();
@@ -28,9 +34,11 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
         mysqli_stmt_close($stmt);
     }
     mysqli_close($link);
+    
 } else {
-    // Check existence of ID parameter on initial GET load
-    if (empty(trim($_GET["id"]))) {
+    // 3. Check existence of ID parameter on initial GET load
+    if (!isset($_GET["id"]) || empty(trim($_GET["id"]))) {
+        mysqli_close($link);
         header("location: error.php");
         exit();
     }
@@ -54,7 +62,6 @@ if (isset($_POST["id"]) && !empty($_POST["id"])) {
                     <form action="delete.php" method="post">
                         <div class="alert alert-danger">
                             <input type="hidden" name="id" value="<?php echo htmlspecialchars(trim($_GET["id"])); ?>"/>
-                            <!-- Pass security token down via POST when executing delete -->
                             <input type="hidden" name="token" value="<?php echo htmlspecialchars($secure_token); ?>"/>
                             <p>Are you sure you want to delete this employee record?</p>
                             <p>
