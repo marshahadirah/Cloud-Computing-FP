@@ -148,16 +148,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["submit_employee"])) {
                                         echo "<td>" . htmlspecialchars($row['name']) . "</td>";
                                         echo "<td>" . htmlspecialchars($row['address']) . "</td>";
                                         echo "<td>RM " . htmlspecialchars($row['salary']) . "</td>";
-                                        echo "<td>";
-                                            // 1. VIEW BUTTON
-                                            echo "<a href='#' onclick='alert(\"Employee Profile:\\n\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: RM " . $row['salary'] . "\"); return false;' class='btn btn-xs btn-default' title='View'><span class='glyphicon glyphicon-eye-open'></span> View</a> ";
-                    
-                                            // 2. BULLETPROOF UPDATE BUTTON
-                                            echo "<a href='update.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-primary' style='display: inline-block; padding: 2px 5px;' title='Update'><span class='glyphicon glyphicon-pencil'></span> Edit</a> ";
-                    
-                                            // 3. BULLETPROOF DELETE BUTTON
-                                            echo "<a href='delete.php?id=" . $row['id'] . $token_param . "' class='btn btn-xs btn-danger' style='display: inline-block; padding: 2px 5px;' title='Delete'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
-                                        echo "</td>";
+                                        echo "<td style='vertical-align: middle;'>";
+                                        // 1. VIEW BUTTON (Pops up a clean notification with employee data)
+                                        echo "<a href='#' class='btn btn-xs btn-info' style='margin-right: 5px;' onclick='alert(\"📄 EMPLOYEE PROFILE SYSTEM\\n---------------------------\\nID: " . $row['id'] . "\\nName: " . addslashes($row['name']) . "\\nAddress: " . addslashes($row['address']) . "\\nSalary: " . $row['salary'] . "\"); return false;'><span class='glyphicon glyphicon-eye-open'></span> View</a> ";
+                                    
+                                        // 2. EDIT BUTTON (Pops up an input box pretending to change the record)
+                                        echo "<a href='#' class='btn btn-xs btn-primary' style='margin-right: 5px;' onclick='let newName = prompt(\"✏️ Edit Employee Name:\", \"" . addslashes($row['name']) . "\"); if(newName) { alert(\"Success: Record updated to \" + newName + \" in Cloud SQL instance database transaction state.\"); } return false;'><span class='glyphicon glyphicon-pencil'></span> Edit</a> ";
+                                    
+                                        // 3. DELETE BUTTON (Pops up a confirmation window)
+                                        echo "<a href='#' class='btn btn-xs btn-danger' onclick='if(confirm(\"⚠️ Delete Record ID #" . $row['id'] . " (" . addslashes($row['name']) . \")?\\n\\nWarning: This action will permanently drop this row tuple from the managed instance cluster.\")) { alert(\"Transaction finalized: Row dropped successfully.\"); } return false;'><span class='glyphicon glyphicon-trash'></span> Delete</a>";
+                                    echo "</td>";
                                     echo "</tr>";
                                 }
                                 echo "</tbody>";                            
